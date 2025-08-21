@@ -1,0 +1,113 @@
+/* style.css */
+
+/* 1. body 배경색 설정 (#f8f9fa 또는 원하는 색상) */
+body {
+    background-color: #d4e0ec;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
+}
+
+/* 2. hero-section 배경 그라데이션 설정 */
+.hero-section {
+    background: linear-gradient(135deg, 50%, 50%); "시작할 색상과 끝나는 색상 적을것"
+    /* 힌트: #667eea, #764ba2 같은 색상 조합 사용 */
+    color: white-space: ;;
+    min-height: 500px;
+}
+
+/* 3. 프로필 이미지 크기 설정 (150px ~ 200px 추천) */ 
+.profile-img {
+    width: 200px;
+    height: 300px;
+    object-fit: cover;
+    border: 5px solid black;  /* 4. 테두리 색상 설정 */
+}
+
+/* 5. 카드 호버 효과 추가 */ "카드에 마우스 커버를 올렸을때 "
+.card {
+    transition: transform 0.3s;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: 100%;
+}
+
+.card:hover {
+    transform: translateY(-5px);  /* 6. -5px 정도 추천 */
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);  /* 7. 0.2 정도 추천 */
+}
+
+/* 8. 섹션 제목 스타일 */
+h2 {
+    color: blue;  /* 원하는 색상 */
+    font-weight: 700;  /* 600 또는 700 추천 */
+    position: relative;
+    display: inline-block;
+}
+
+/* 9. 제목 아래 장식선 추가 */
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;  /* 50px 추천 */
+    height: 3px;  /* 3px 추천 */
+    background-color: red;  /* 원하는 색상 */
+}
+
+/* 10. 버튼 커스텀 스타일 */
+.btn {
+    padding: 12px 30px;  /* 12px 30px 추천 */
+    font-size: 16px;  /* 16px 추천 */
+    border-radius: 15px;  /* 25px 추천 */
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    transform: scale(1.05);  /* 1.05 추천 */
+}
+
+
+
+
+/* 태블릿 반응형 (768px ~ 991px) */
+@media (max-width: 991px) {
+    /* 1. 카드 레이아웃 조정 */
+    .col-md-4 {
+        margin-bottom: 20px;  /* 20px 추천 */
+    }
+
+    /* 2. 패딩 조정 */
+    section {
+        padding: 40px 0;  /* 40px 추천 */
+    }
+}
+
+/* 모바일 반응형 (768px 이하) */
+@media (max-width: 768px) {
+    /* 3. 모바일에서 프로필 이미지 크기 조정 */
+    .profile-img {
+        width: 120px;  /* 120px 추천 */
+        height: 120px;
+    }
+
+    /* 4. 모바일에서 제목 크기 조정 */
+    .display-4 {
+        font-size: 2%;  /* 2rem 추천 */
+    }
+
+    /* 5. hero 섹션 높이 조정 */
+    .hero-section {
+        min-height: 400px;  /* 400px 추천 */
+        padding: 30px 0;  /* 30px 추천 */
+    }
+
+    /* 6. 네비게이션 간격 조정 */
+    .navbar-nav {
+        text-align: center;
+    }
+}
+.Go somewhere {
+    text-align: center;
+}
