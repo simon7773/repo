@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  username  String
+  avatar    String?
+  phone     String?
+  address   String?
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 기존 SNS 기능 (리뷰/갤러리로 활용)
+  posts    Post[]
+  comments Comment[]
+  likes    Like[]
+
+  // 청소 업체 기능
+  bookings Booking[]
+}
+
+enum Role {
+  ADMIN      // 관리자
+  EMPLOYEE   // 청소 직원
+  CUSTOMER   // 고객
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  content   String
+  image     String?
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  likes    Like[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  userId    Int
+  postId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+// === 청소 업체 비즈니스 모델 ===
+
+model Service {
+  id           Int             @id @default(autoincrement())
+  name         String          // 서비스 이름 (예: 가정 청소, 사무실 청소)
+  description  String?         // 서비스 설명
+  price        Int             // 기존 호환용 (deprecated)
+  basePrice    Int             @default(0)  // 기본 가격 (원)
+  pricePerArea Int             @default(0)  // 평당 추가금 (원)
+  minArea      Int?            // 최소 평수
+  duration     Int             // 기본 소요 시간 (분)
+  category     ServiceCategory
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  bookings Booking[]
+}
+
+enum ServiceCategory {
+  HOME        // 가정 청소
+  OFFICE      // 사무실 청소
+  MOVE        // 이사 청소
+  SPECIAL     // 특수 청소 (수영장, 외벽 등)
+}
+
+model Booking {
+  id            Int           @id @default(autoincrement())
+  customerId    Int
+  serviceId     Int
+  bookingDate   DateTime      // 예약 날짜
+  startTime     String        // 시작 시간 (예: "09:00")
+  endTime       String        // 종료 시간 (예: "18:00")
+  status        BookingStatus @default(PENDING)
+  address       String        // 작업 주소
+  detailAddress String?       // 상세 주소
+  area          Int?          // 면적 (평수)
+  specialRequest String?      // 특이사항
+
+  // 가격 관련
+  price         Int           // 기존 호환용 (deprecated)
+  servicePrice  Int           @default(0)  // 서비스 가격 (기본가 + 면적 추가금)
+  optionsPrice  Int           @default(0)  // 추가 옵션 총액
+  totalPrice    Int           @default(0)  // 최종 가격
+
+  // 작업 관련
+  beforeImages  String[]      // 작업 전 사진
+  afterImages   String[]      // 작업 후 사진
+  completedAt   DateTime?     // 작업 완료 시간
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  customer User            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  service  Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  options  BookingOption[] // 선택한 추가 옵션들
+}
+
+enum BookingStatus {
+  PENDING     // 예약 대기
+  CONFIRMED   // 예약 확정
+  IN_PROGRESS // 작업 중
+  COMPLETED   // 완료
+  CANCELLED   // 취소
+}
+
+// === 추가 옵션 ===
+
+model AdditionalOption {
+  id          Int            @id @default(autoincrement())
+  name        String         // 옵션명 (예: 창문 청소, 에어컨 청소)
+  category    OptionCategory // 카테고리
+  priceType   PriceType      // 가격 타입
+  basePrice   Int            // 기본 가격
+  unit        String?        // 단위 (개, 대, 평)
+  description String?        // 설명
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  bookingOptions BookingOption[]
+}
+
+enum OptionCategory {
+  CLEANING    // 청소 관련 (창문, 베란다 등)
+  APPLIANCE   // 가전 관련 (에어컨, 세탁기, 냉장고 등)
+  SPECIAL     // 특수 작업 (곰팡이 제거, 소독 등)
+}
+
+enum PriceType {
+  FIXED       // 고정가 (예: 베란다 청소 50,000원)
+  PER_UNIT    // 개당 (예: 에어컨 1대당 30,000원)
+  PER_AREA    // 평당 (예: 바닥 왁스 평당 5,000원)
+}
+
+// 예약-옵션 연결 테이블
+model BookingOption {
+  id        Int      @id @default(autoincrement())
+  bookingId Int
+  optionId  Int
+  quantity  Int      @default(1)  // 수량 (개수, 대수 등)
+  price     Int                   // 해당 옵션의 계산된 가격
+  createdAt DateTime @default(now())
+
+  booking Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  option  AdditionalOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, optionId])
+}
+
+// 예약 불가능 날짜
+model BlockedDate {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @unique  // 예약 불가 날짜
+  reason    String?           // 사유 (공휴일, 만석 등)
+  createdAt DateTime @default(now())
+}
+
+// 갤러리 이미지 (Before/After)
+model GalleryImage {
+  id          Int             @id @default(autoincrement())
+  category    ServiceCategory // 서비스 카테고리 (HOME, OFFICE, MOVE, SPECIAL)
+  tab         String          // 탭 (room, kitchen, entrance, window)
+  imageType   ImageType       // BEFORE 또는 AFTER
+  imageUrl    String          // 이미지 경로
+  description String?         // 이미지 설명
+  order       Int             @default(0)  // 정렬 순서
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+enum ImageType {
+  BEFORE
+  AFTER
+  TAB      // 탭 대표 이미지
+}

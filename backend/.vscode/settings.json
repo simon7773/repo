@@ -1,0 +1,6 @@
+{
+  "prisma.showPrismaDataPlatformNotification": false,
+  "files.exclude": {
+    "**/.prisma": true
+  }
+}
